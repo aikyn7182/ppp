@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Рекурсия - Интерактивті тапсырмалар</title>
+    <style>
+        :root {
+            --bg: #E8F0FE;
+            --primary: #1A73E8;
+            --secondary: #F9AB00;
+            --success: #34A853;
+            --danger: #EA4335;
+            --text: #202124;
+            --card: #FFFFFF;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            font-size: 20px; /* Интерактивті тақта үшін үлкен шрифт */
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+        header {
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { margin: 0; font-size: 32px; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            background: #D2E3FC;
+            color: var(--primary);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(26,115,232,0.3);
+        }
+        
+        .content-box {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: none;
+            min-height: 400px;
+        }
+        .content-box.active { display: block; }
+        h2 { color: var(--primary); margin-top: 0; font-size: 28px;}
+        p.instruction { font-size: 22px; color: #5F6368; margin-bottom: 20px; }
+
+        /* 1-тапсырма: Сәйкестендіру */
+        .match-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .match-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .match-item {
+            padding: 20px;
+            background: #F1F3F4;
+            border: 2px solid #DADCE0;
+            border-radius: 10px;
+            font-size: 22px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+        .match-item:hover { background: #E8EAED; }
+        .match-item.selected { border-color: var(--primary); background: #D2E3FC; }
+        .match-item.correct { border-color: var(--success); background: #CEEAD6; color: var(--success); cursor: default; }
+        .match-item.wrong { border-color: var(--danger); background: #FAD2CF; color: var(--danger); animation: shake 0.5s;}
+
+        /* 2-тапсырма: Кодты құрастыру */
+        .code-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .code-line {
+            padding: 15px 20px;
+            background: #2D3748;
+            color: #E2E8F0;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 24px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .code-line:hover { border-color: var(--secondary); }
+        .code-line.used { opacity: 0.3; pointer-events: none; }
+        .drop-zone {
+            min-height: 150px;
+            border: 3px dashed #BDC1C6;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #F8F9FA;
+        }
+        .drop-zone.active { border-color: var(--primary); background: #E8F0FE; }
+
+        /* 3-тапсырма: Қатені табу */
+        .buggy-code {
+            background: #2D3748;
+            color: #E2E8F0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 24px;
+            line-height: 1.5;
+            position: relative;
+        }
+        .bug-line {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+        .bug-line:hover { background: rgba(255,255,255,0.1); }
+        .bug-line.found { background: rgba(234, 67, 53, 0.4); border: 2px solid var(--danger); }
+
+        /* Жалпы батырмалар */
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .action-btn:hover { background: #1557B0; }
+        .action-btn.reset { background: #5F6368; margin-left: 10px;}
+        .action-btn.reset:hover { background: #3C4043; }
+        
+        #msg { font-size: 24px; font-weight: bold; margin-top: 20px; }
+        .msg-success { color: var(--success); }
+        .msg-error { color: var(--danger); }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🐍 Python: Рекурсия және Функциялар</h1>
+        <p style="font-size: 20px; margin-top: 10px;">Интерактивті тақтаға арналған тапсырмалар</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('task1')">1. Сәйкестендіру</button>
+        <button class="tab-btn" onclick="openTab('task2')">2. Кодты құрастыру</button>
+        <button class="tab-btn" onclick="openTab('task3')">3. Қатені табу</button>
+    </div>
+
+    <!-- 1-ТАПСЫРМА: СӘЙКЕСТЕНДІРУ -->
+    <div id="task1" class="content-box active">
+        <h2>Тапсырма 1: Термин мен анықтаманы сәйкестендір</h2>
+        <p class="instruction">Сол жақтағы терминдерді басып, оған сәйкес келетін оң жақтағы анықтаманы таңдаңыз.</p>
+        
+        <div class="match-container">
+            <div class="match-col" id="terms-col">
+                <div class="match-item" data-id="1">def</div>
+                <div class="match-item" data-id="2">return</div>
+                <div class="match-item" data-id="3">Рекурсия</div>
+                <div class="match-item" data-id="4">Процедура</div>
+            </div>
+            <div class="match-col" id="defs-col">
+                <div class="match-item" data-id="4">Нәтижені қайтармайтын командалар блогы</div>
+                <div class="match-item" data-id="1">Функцияны анықтауға арналған кілттік сөз</div>
+                <div class="match-item" data-id="3">Функцияның өзін-өзі шақыруы</div>
+                <div class="match-item" data-id="2">Функциядан мәнді қайтаратын оператор</div>
+            </div>
+        </div>
+        <div id="msg-task1"></div>
+    </div>
+
+    <!-- 2-ТАПСЫРМА: КОДТЫ ҚҰРАСТЫРУ -->
+    <div id="task2" class="content-box">
+        <h2>Тапсырма 2: Рекурсивті факториал кодын құрастыр</h2>
+        <p class="instruction">Төмендегі шашыраңқы жолдарды дұрыс ретпен басып, бос орынға жинаңыз. (Жоғарыдан төменге қарай реттілік сақталуы керек).</p>
+        
+        <div class="drop-zone" id="code-drop-zone">
+            <!-- Таңдалған код осында шығады -->
+        </div>
+
+        <h3 style="margin-top: 30px;">Қолжетімді жолдар:</h3>
+        <div class="code-lines" id="code-pool">
+            <div class="code-line" onclick="selectCodeLine(this, '    return n * fact(n - 1)')">    return n * fact(n - 1)</div>
+            <div class="code-line" onclick="selectCodeLine(this, 'def fact(n):')">def fact(n):</div>
+            <div class="code-line" onclick="selectCodeLine(this, '    if n == 0:')">    if n == 0:</div>
+            <div class="code-line" onclick="selectCodeLine(this, '    else:')">    else:</div>
+            <div class="code-line" onclick="selectCodeLine(this, '        return 1')">        return 1</div>
+        </div>
+        
+        <button class="action-btn" onclick="checkCodeOrder()">Тексеру</button>
+        <button class="action-btn reset" onclick="resetTask2()">Қайта бастау</button>
+        <div id="msg-task2"></div>
+    </div>
+
+    <!-- 3-ТАПСЫРМА: ҚАТЕНІ ТАБУ -->
+    <div id="task3" class="content-box">
+        <h2>Тапсырма 3: Кодтағы қатені тап</h2>
+        <p class="instruction">Төмендегі рекурсивті функцияда <b>базалық жағдай (тоқтату шарты)</b> жоқ. Қате тұрған жолды (немесе жетіспейтін бөлікті) басыңыз.</p>
+        
+        <div class="buggy-code">
+            <div class="bug-line" onclick="checkBug(this, false)">def fact(n):</div>
+            <div class="bug-line" onclick="checkBug(this, true)">    return n * fact(n - 1)  <!-- Осы жерде базалық жағдай жоқ! --></div>
+        </div>
+        
+        <div id="msg-task3"></div>
+    </div>
+
+</div>
+
+<script>
+    // --- Жалпы функциялар ---
+    function openTab(tabId) {
+        document.querySelectorAll('.content-box').forEach(box => box.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // --- 1-ТАПСЫРМА: СӘЙКЕСТЕНДІРУ ---
+    let selectedTerm = null;
+
+    document.querySelectorAll('#terms-col .match-item').forEach(item => {
+        item.addEventListener('click', function() {
+            if (this.classList.contains('correct')) return;
+            
+            // Басқа таңдауларды алып тастау
+            document.querySelectorAll('#terms-col .match-item').forEach(i => i.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedTerm = this;
+        });
+    });
+
+    document.querySelectorAll('#defs-col .match-item').forEach(item => {
+        item.addEventListener('click', function() {
+            if (!selectedTerm || this.classList.contains('correct')) return;
+
+            if (selectedTerm.dataset.id === this.dataset.id) {
+                // Дұрыс жауап
+                selectedTerm.classList.remove('selected');
+                selectedTerm.classList.add('correct');
+                this.classList.add('correct');
+                selectedTerm = null;
+                checkTask1Completion();
+            } else {
+                // Қате жауап
+                this.classList.add('wrong');
+                setTimeout(() => this.classList.remove('wrong'), 500);
+            }
+        });
+    });
+
+    function checkTask1Completion() {
+        const correctCount = document.querySelectorAll('#terms-col .correct').length;
+        if (correctCount === 4) {
+            document.getElementById('msg-task1').innerHTML = "🎉 Керемет! Барлығын дұрыс сәйкестендірдіңіз!";
+            document.getElementById('msg-task1').className = "msg-success";
+        }
+    }
+
+    // --- 2-ТАПСЫРМА: КОДТЫ ҚҰРАСТЫРУ ---
+    let userCodeOrder = [];
+
+    function selectCodeLine(element, codeText) {
+        // Элементті өшіру
+        element.classList.add('used');
+        
+        // Дроп-зонаға қосу
+        const dropZone = document.getElementById('code-drop-zone');
+        const newLine = document.createElement('div');
+        newLine.className = 'code-line';
+        newLine.style.background = '#1A73E8'; // Қосылғанын көрсету үшін түсін өзгерту
+        newLine.textContent = codeText;
+        // Қайта басу арқылы өшіру мүмкіндігі
+        newLine.onclick = function() {
+            dropZone.removeChild(this);
+            element.classList.remove('used');
+            userCodeOrder = userCodeOrder.filter(c => c !== codeText);
+        };
+        
+        dropZone.appendChild(newLine);
+        userCodeOrder.push(codeText);
+    }
+
+    function checkCodeOrder() {
+        const correctOrder = [
+            'def fact(n):',
+            '    if n == 0:',
+            '        return 1',
+            '    else:',
+            '    return n * fact(n - 1)'
+        ];
+
+        const msg = document.getElementById('msg-task2');
+        
+        if (userCodeOrder.length !== correctOrder.length) {
+            msg.innerHTML = "⚠️ Барлық код жолдарын қосыңыз!";
+            msg.className = "msg-error";
+            return;
+        }
+
+        let isCorrect = true;
+        for (let i = 0; i < correctOrder.length; i++) {
+            if (userCodeOrder[i] !== correctOrder[i]) {
+                isCorrect = false;
+                break;
+            }
+        }
+
+        if (isCorrect) {
+            msg.innerHTML = "✅ Керемет! Рекурсивті функция коды дұрыс құрастырылды!";
+            msg.className = "msg-success";
+        } else {
+            msg.innerHTML = "❌ Қате! Кодтың реті дұрыс емес. (Кеңес: if/else шарттарын тексеріңіз)";
+            msg.className = "msg-error";
+        }
+    }
+
+    function resetTask2() {
+        document.getElementById('code-drop-zone').innerHTML = '';
+        document.getElementById('msg-task2').innerHTML = '';
+        userCodeOrder = [];
+        document.querySelectorAll('#code-pool .code-line').forEach(line => {
+            line.classList.remove('used');
+            line.style.background = '#2D3748'; // Түпнұсқа түс
+        });
+    }
+
+    // --- 3-ТАПСЫРМА: ҚАТЕНІ ТАБУ ---
+    function checkBug(element, isCorrect) {
+        if (isCorrect) {
+            element.classList.add('found');
+            document.getElementById('msg-task3').innerHTML = "✅ Дұрыс таптыңыз! Бұл жерде базалық жағдай (<code>if n == 0: return 1</code>) жоқ. Онсыз функция шексіз шақырылып, қате шығарады (Stack Overflow).";
+            document.getElementById('msg-task3').className = "msg-success";
+        } else {
+            element.style.background = "rgba(234, 67, 53, 0.4)";
+            setTimeout(() => element.style.background = "transparent", 500);
+            document.getElementById('msg-task3').innerHTML = "❌ Бұл жолда қате жоқ. Функция атауы мен параметрі дұрыс.";
+            document.getElementById('msg-task3').className = "msg-error";
+        }
+    }
+</script>
+
+</body>
+</html>
